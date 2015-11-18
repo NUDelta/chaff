@@ -16,11 +16,13 @@ $(document).ready(function () {
 
   panelPort.onMessage.addListener(function (message) {
     if (message && message.target == "page" && message.name == "JSTrace") {
-      console.log("received ", message.data);
+      console.log("message received");
+      $("#isolate").prop("disabled", false);
+      
     }
   });
 
-  $("#demo").click(function () {
+  $("#isolate").click(function () {
     console.log('i clicked');
 
     var foo = function (arg1, arg2) {
@@ -37,5 +39,3 @@ $(document).ready(function () {
     runInPage(foo, callback, "some arg", "some arg 2")
   });
 });
-
-
