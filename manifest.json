@@ -19,6 +19,7 @@
       "match_about_blank": true,
       "js": [
         "jquery-2.1.4.js",
+        "underscore.js",
         "contentscript.js"
       ],
       "run_at": "document_start",
