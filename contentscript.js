@@ -4,12 +4,14 @@ window.addEventListener("JSTrace", function (event) {
     name: "JSTrace",
     data: event.detail
   });
+  console.log(event);
 }, false);
 
 var lastClicked = null;     // store the last thing we clicked so we can restore its outline
+var flag = "ayy";
 
 $(document).click(function(event) {
-  console.log(event.target);
+  // console.log(event.target);
 
   // restore outline of last clicked item
   if (lastClicked) {
@@ -26,7 +28,7 @@ $(document).click(function(event) {
 
   // send the serialized HTML to the extension
   var clicked = event.target.outerHTML;
-  console.log(clicked);
+  // console.log(clicked);
   chrome.extension.sendMessage({
     target: "page",
     name: "JSTrace",

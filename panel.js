@@ -18,24 +18,23 @@ $(document).ready(function () {
     if (message && message.target == "page" && message.name == "JSTrace") {
       console.log("message received");
       $("#isolate").prop("disabled", false);
-      
+
     }
   });
 
   $("#isolate").click(function () {
     console.log('i clicked');
 
-    var foo = function (arg1, arg2) {
-      console.log("Gravel: Injected event is being dispatched.");
-      console.log(arg1);
-      console.log(arg2);
-      window.dispatchEvent(new CustomEvent("JSTrace", {"detail": [arg1, arg2]}));
+    var foo = function () {
+      console.log("Sandpaper: Isolating HTML");
+      console.log(flag);
+      window.dispatchEvent(new CustomEvent("JSTrace", {"command": "isolate"}));
     };
 
     var callback = function () {
       console.log('successfully injected into DOM webpage');
     };
 
-    runInPage(foo, callback, "some arg", "some arg 2")
+    runInPage(foo, callback);
   });
 });
