@@ -9202,8 +9202,27 @@ if ( typeof noGlobal === strundefined ) {
 	window.jQuery = window.$ = jQuery;
 }
 
+// CUSTOM SCRIPT: Inject code that generate a root-to-element path for a given element
+$.fn.getPath = function () {
+  var unravelDelete = null;
+  //some text
 
-
+  if (this.length != 1) throw 'Requires one element.';
+  var path, node = this;
+  while (node.length) {
+    var realNode = node[0], name = realNode.localName;
+    if (!name) break;
+    name = name.toLowerCase();
+    var parent = node.parent();
+    var siblings = parent.children(name);
+    if (siblings.length > 1) {
+      name += ':eq(' + siblings.index(realNode) + ')';
+    }
+    path = name + (path ? '>' + path : '');
+    node = parent;
+  }
+  return path;
+};
 
 return jQuery;
 
