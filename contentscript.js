@@ -7,11 +7,11 @@ window.addEventListener("JSTrace", function (event) {
   console.log(event);
 }, false);
 
-var lastClicked = null;     // store the last thing we clicked so we can restore its outline
 
+// single click simply highlights the element
+// store the last thing we clicked so we can restore its outline afterwards
+var lastClicked = null;
 $(document).click(function(event) {
-  // console.log(event.target);
-
   // restore outline of last clicked item
   if (lastClicked) {
     lastClicked.target.style.border = lastClicked.previousBorderAttribute;
@@ -27,7 +27,6 @@ $(document).click(function(event) {
 
   // send the serialized HTML to the extension
   var clicked = event.target.outerHTML;
-  // console.log(clicked);
   chrome.extension.sendMessage({
     target: "page",
     name: "JSTrace",
@@ -35,17 +34,54 @@ $(document).click(function(event) {
   });
 });
 
-$(document).dblclick(function(event) {
-  // remote all parent siblings as they are probably not relevant?
-  var node = $(event.target);
-  _.each(node.parents(), function(element, idx, parents) {
-    // console.log($(element).className);
-    _.each($(element).siblings(), function(sibling, idx, siblings) {
-      $(sibling).remove();
-      // if ($(sibling).prop("tagName") !== "STYLE") {
-      //
-      //   sibling.remove();
-      // }
-    });
+
+var findSafePaths = function(node) {
+  var safePaths = [];
+
+  // safePaths consist of
+  // all the direct ancestors of a node
+  _.each(node.parents(), function(el) {
+    safePaths.push($(el).getPath());
   });
+
+  // the node itself
+  safePaths.push(node.getPath());
+
+  // and ALL its children
+  _.each(node.find('*'), function(child) {
+    safePaths.push($(child).getPath());
+  });
+
+  return safePaths;
+
+};
+
+
+// using safePath, whittle away everything that's not in it or not CSS/JS
+var whittle = function (safePaths) {
+  var trashEls = [];
+
+  $('*').each(function (i, el) {
+    var path = $(el).getPath();
+    if (path.indexOf("head") > -1 || path.indexOf("script") > -1 || path.indexOf("style") > -1) {
+      return;
+    }
+
+    if (safePaths.indexOf(path) < 0) {
+      trashEls.push(el);
+    }
+  });
+
+  trashEls.forEach(function (el, index, array) {
+    $(el).remove();
+  });
+};
+
+
+// on double click, strip away non-relevant elements
+$(document).dblclick(function(event) {
+  var node = $(event.target);
+  var safePaths = findSafePaths(node);
+  whittle(safePaths);
+
 });
