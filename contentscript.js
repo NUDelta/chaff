@@ -44,6 +44,8 @@ var findSafePaths = function(node) {
     safePaths.push($(el).getPath());
   });
 
+  safePaths.push($('head').getPath());
+
   // the node itself
   safePaths.push(node.getPath());
 
@@ -63,7 +65,10 @@ var whittle = function (safePaths) {
 
   $('*').each(function (i, el) {
     var path = $(el).getPath();
-    if (path.indexOf("head") > -1 || path.indexOf("script") > -1 || path.indexOf("style") > -1) {
+    if (path.indexOf("head") > -1 && path.indexOf("head") !== path.indexOf("header")) {
+      return;
+    }
+    if (path.indexOf("script") > -1 || path.indexOf("style") > -1) {
       return;
     }
 
@@ -78,10 +83,86 @@ var whittle = function (safePaths) {
 };
 
 
+// strip CSS
+var stripCSS = function() {
+  var css = "";
+  if (document.styleSheets && document.styleSheets.length) {
+
+    // iterate over stylesheets
+    for (var i = 0; i < document.styleSheets.length; i++) {
+      if (document.styleSheets[i] && document.styleSheets[i].cssRules) {
+        var cssRules = document.styleSheets[i].cssRules;
+
+        // iterate over css rules
+        for (var j = 0; j < cssRules.length; j++) {
+          var keepRule = false;
+          var mediaRuleText = "";
+
+          try {
+            var selectorText = cssRules[j].selectorText;
+            var selectors = selectorText.split(",");
+
+            keepRule = !!_(selectors).find(function (selector) {
+              var checkText = selector.indexOf(':') > -1 ? selector.substr(0, selector.indexOf(':')) : selector;
+              return !!$(checkText).length;
+            });
+
+          } catch (err) {
+            if (cssRules[j] instanceof CSSMediaRule) {
+              var subRulesToRemove = [];
+
+              var mediaRule = cssRules[j];
+              var innerCSSRules = mediaRule.cssRules;
+              for (var k = 0; k < innerCSSRules.length; k++) {
+                var innerMediaRule = innerCSSRules[k];
+                var innerSelectorText = innerMediaRule.selectorText;
+
+                try {
+                  var innerSelectors = innerSelectorText.split(",");
+                  var innerExists = !!_(innerSelectors).find(function (selector) {
+                    var checkText = selector.indexOf(':') > -1 ? selector.substr(0, selector.indexOf(':')) : selector;
+                    return !!$(checkText).length;
+                  });
+                  if (!innerExists) {
+                    subRulesToRemove.push(innerMediaRule.cssText);
+                  }
+                } catch (err) {
+                }
+              }
+              keepRule = false;
+
+              if (innerCSSRules.length === subRulesToRemove.length) {
+                mediaRuleText = "";
+              } else {
+                mediaRuleText = cssRules[j].cssText;
+                for (var l = 0; l < subRulesToRemove.length; l++) {
+                  mediaRuleText = mediaRuleText.replace(subRulesToRemove[l], "");
+                }
+              }
+            } else {
+              keepRule = true;
+            }
+          }
+
+          if (keepRule) {
+            css += cssRules[j].cssText + "\n";
+          } else if (mediaRuleText) {
+            css += mediaRuleText;
+          } else {
+            console.log(cssRules[j]);
+          }
+        }
+      }
+    }
+  }
+
+  return css;
+};
+
 // on double click, strip away non-relevant elements
 $(document).dblclick(function(event) {
   var node = $(event.target);
   var safePaths = findSafePaths(node);
   whittle(safePaths);
-
+  // console.log(stripCSS());
 });
