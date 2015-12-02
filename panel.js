@@ -5,7 +5,6 @@ var runInPage = function (fn, callback) {
   chrome.devtools.inspectedWindow.eval(evalCode, {}, callback);
 };
 
-
 $(document).ready(function () {
   var tabId = chrome.devtools.inspectedWindow.tabId;
   var panelPort = chrome.extension.connect({name: "gravelpanel"});
@@ -17,24 +16,26 @@ $(document).ready(function () {
   panelPort.onMessage.addListener(function (message) {
     if (message && message.target == "page" && message.name == "JSTrace") {
       console.log("message received");
-      $("#isolate").prop("disabled", false);
+      console.log(message);
 
+      $('.functions').empty();
+      for (var i = 0; i < message.data.length; i++) {
+        $('<input/>', {
+          type: 'checkbox',
+          id: 'cb'+i,
+          value: message.data[i],
+          "checked": "checked"
+        }).appendTo($('.functions'));
+
+        $('<label/>', {
+          for: 'cb'+i,
+          text: message.data[i]
+        }).appendTo($('.functions'));
+
+        $('<br/>').appendTo($('.functions'));
+
+
+      }
     }
-  });
-
-  $("#isolate").click(function () {
-    console.log('i clicked');
-
-    var foo = function () {
-      console.log("Sandpaper: Isolating HTML");
-      console.log(flag);
-      window.dispatchEvent(new CustomEvent("JSTrace", {"command": "isolate"}));
-    };
-
-    var callback = function () {
-      console.log('successfully injected into DOM webpage');
-    };
-
-    runInPage(foo, callback);
   });
 });
