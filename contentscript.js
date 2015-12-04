@@ -7,6 +7,7 @@ window.addEventListener("JSTrace", function (event) {
   console.log(event);
 }, false);
 
+// listener associated with getting own variable
 window.addEventListener("message", function(event) {
   if (event.source != window) {
     return;
@@ -23,6 +24,15 @@ window.addEventListener("message", function(event) {
     });
   }
 });
+
+window.addEventListener("disable", function(event) {
+  if (event.data.type && (event.data.type == "DISABLE")) {
+    console.log("Request to disable " + event.data.text);
+  }
+});
+
+
+
 
 // single click simply highlights the element
 // store the last thing we clicked so we can restore its outline afterwards
@@ -105,8 +115,6 @@ var collectFunctions = function() {
     text: functions
   }, "*");
 };
-
-
 
 // on double click, strip away non-relevant elements
 $(document).dblclick(function(event) {

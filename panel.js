@@ -1,9 +1,17 @@
 var runInPage = function (fn, callback) {
   var args = Array.prototype.slice.call(arguments, 2);
   var evalCode = "(" + fn.toString() + ").apply(this, " + JSON.stringify(args) + ");";
-  console.log(args);
-  chrome.devtools.inspectedWindow.eval(evalCode, {}, callback);
+  console.log(evalCode);
+  chrome.devtools.inspectedWindow.eval(evalCode, {}, function(res, exceptionInfo) {
+    console.log(res);
+    console.log(exceptionInfo);
+  });
 };
+
+function requestDisable(functionName) {
+  console.log("This is from the dom");
+  window[functionName] = null;
+}
 
 $(document).ready(function () {
   var tabId = chrome.devtools.inspectedWindow.tabId;
@@ -35,13 +43,11 @@ $(document).ready(function () {
         $('<br/>').appendTo($('.functions'));
 
         $('#cb' + i + ":checkbox").change(function(e) {
-          console.log(e.target.id);
-          console.log(e.target.checked);
-          chrome.devtools.inspectedWindow.eval("console.log(functions[i])");
-
+          console.log(e.target.value);
+          // chrome.devtools.inspectedWindow.eval("console.log('wow');");
+          // runInPage(console.log("wow"), null);
+          runInPage(requestDisable, null, e.target.value);
         });
-
-
       }
     }
   });
