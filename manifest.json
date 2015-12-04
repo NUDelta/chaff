@@ -30,5 +30,6 @@
   "permissions": [
     "<all_urls>",
     "tabs"
-  ]
+  ],
+  "web_accessible_resources": ["contentScript.js"]
 }

@@ -34,6 +34,13 @@ $(document).ready(function () {
 
         $('<br/>').appendTo($('.functions'));
 
+        $('#cb' + i + ":checkbox").change(function(e) {
+          console.log(e.target.id);
+          console.log(e.target.checked);
+          chrome.devtools.inspectedWindow.eval("console.log(functions[i])");
+
+        });
+
 
       }
     }

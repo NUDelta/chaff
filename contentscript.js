@@ -7,6 +7,22 @@ window.addEventListener("JSTrace", function (event) {
   console.log(event);
 }, false);
 
+window.addEventListener("message", function(event) {
+  if (event.source != window) {
+    return;
+  }
+
+  if (event.data.type && (event.data.type == "FROM_PAGE")) {
+    console.log(event.data.text);
+
+    // send the array of functions over
+    chrome.extension.sendMessage({
+      target: "page",
+      name: "JSTrace",
+      data: event.data.text
+    });
+  }
+});
 
 // single click simply highlights the element
 // store the last thing we clicked so we can restore its outline afterwards
@@ -72,35 +88,36 @@ var whittle = function (safePaths) {
 };
 
 
-// on double click, strip away non-relevant elements
-$(document).dblclick(function(event) {
-  var node = $(event.target);
-  var safePaths = findSafePaths(node);
-  whittle(safePaths);
-
-  // collect functions on page
+// a function that collects all functions in a given namespace, to be injected and run from the DOM
+var collectFunctions = function() {
+  var keys = Object.keys(window);
   var functions = [];
-  var functionNames = [];
 
-  _.each(Object.keys(window), function(object) {
-    if (window[object] instanceof Function) {
-      functions.push(window[object]);
-      functionNames.push(window[object].name || "<Anonymous function>");
+  keys.forEach(function(key) {
+    if (window[key] instanceof Function) {
+      functions.push(window[key].name || "<Anonymous function>");
     }
   });
 
-  // console.log(functions);
-  // console.log(functionNames);
+  // once you have the functions, send a message from the DOM to itself so the content script can intercept it
+  window.postMessage({
+    type: "FROM_PAGE",
+    text: functions
+  }, "*");
+};
 
-  // _.each(functions, function(func) {
-  //   console.log(func.name);
-  // });
 
-  // send the array of functions over
-  chrome.extension.sendMessage({
-    target: "page",
-    name: "JSTrace",
-    data: functionNames
-  });
+
+// on double click, strip away non-relevant elements
+$(document).dblclick(function(event) {
+
+  // whittle HTML that we can safely remove
+  var safePaths = findSafePaths($(event.target));
+  whittle(safePaths);
+
+  // inject script to get all functions in the window
+  var script = document.createElement("script");
+  script.appendChild(document.createTextNode("(" + collectFunctions + ")();"));
+  (document.body || document.head || document.documentElement).appendChild(script);
 
 });
