@@ -14,12 +14,14 @@
 
 ##### How it works
 Because the contentscript is sandboxed from the original web page, we need to "cheat" to get the functions on the page:
+
 1. Create a function that stores all globally available functions from its current namespace by inspecting the keys of its own window - this will be injected into the page as an inline script, giving it access to the web page's namespace
 2. Have this function then send a message from the DOM to itself with the list of functions it has gathered
 3. Create another function in the contentscript to intercept this message. It's important to note that the contentscript has its own namespace, but it can access the web page's DOM, including all messages, allowing it indirectly. access to the page's namespace
 4. This information is forwarded to the Chrome extension
 
 How enabling and disabling functions works
+
 1. Since the dev panel has eval access to the web page's namespace, this is pretty straightforward. The disable function finds the name of the function that has been unchecked, and finds it in the window. It saves a copy of it in some object, then renames the function to null, effectively removing it.
 2. The enable function does the opposite, bringing the function back to the appropriate variable.
 
