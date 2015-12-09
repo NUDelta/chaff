@@ -1,16 +1,19 @@
 {
   "name": "Sandpaper",
-  "version": "0.1.0",
-  "description": "Strip away useless HTML/CSS/JS for component recreation",
+  "version": "1.0.0",
+  "description": "Sand away useless HTML and isolate JS to aid in component recreation",
   "minimum_chrome_version": "22.0",
   "manifest_version": 2,
+
   "devtools_page": "devtools.html",
+
   "background": {
     "scripts": [
       "background.js"
     ],
     "persistent": false
   },
+
   "content_scripts": [
     {
       "matches": [
@@ -18,14 +21,15 @@
       ],
       "match_about_blank": true,
       "js": [
-        "jquery-2.1.4.js",
-        "underscore.js",
+        "res/jquery-2.1.4.js",
+        "res/underscore.js",
         "contentscript.js"
       ],
       "run_at": "document_start",
       "all_frames": true
     }
   ],
+
   "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
   "permissions": [
     "<all_urls>",

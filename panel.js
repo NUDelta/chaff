@@ -1,16 +1,19 @@
 var runInPage = function (fn, callback) {
   var args = Array.prototype.slice.call(arguments, 2);
   var evalCode = "(" + fn.toString() + ").apply(this, " + JSON.stringify(args) + ");";
-  console.log(evalCode);
-  chrome.devtools.inspectedWindow.eval(evalCode, {}, function(res, exceptionInfo) {
-    console.log(res);
-    console.log(exceptionInfo);
-  });
+  chrome.devtools.inspectedWindow.eval(evalCode, {}, callback);
 };
 
 function requestDisable(functionName) {
-  console.log("This is from the dom");
+  console.log("Disabling function: " + functionName);
+  window.disabledFunctions = window.disabledFunctions || {};
+  window.disabledFunctions[functionName] = window[functionName];
   window[functionName] = null;
+}
+
+function requestEnable(functionName) {
+  console.log("Enabling function: " + functionName);
+  window[functionName] = window.disabledFunctions[functionName];
 }
 
 $(document).ready(function () {
@@ -23,11 +26,11 @@ $(document).ready(function () {
 
   panelPort.onMessage.addListener(function (message) {
     if (message && message.target == "page" && message.name == "JSTrace") {
-      console.log("message received");
-      console.log(message);
 
+      // create a list of checkboxes, one for each function, that when unchecked will enable/disable a function
       $('.functions').empty();
       for (var i = 0; i < message.data.length; i++) {
+        // create the checkbox
         $('<input/>', {
           type: 'checkbox',
           id: 'cb'+i,
@@ -42,11 +45,14 @@ $(document).ready(function () {
 
         $('<br/>').appendTo($('.functions'));
 
+        // behavior handler
         $('#cb' + i + ":checkbox").change(function(e) {
-          console.log(e.target.value);
-          // chrome.devtools.inspectedWindow.eval("console.log('wow');");
-          // runInPage(console.log("wow"), null);
-          runInPage(requestDisable, null, e.target.value);
+          console.log(e);
+          if (e.target.checked) {
+            runInPage(requestEnable, function() { console.log(arguments); }, e.target.value);
+          } else {
+            runInPage(requestDisable, function() { console.log(arguments); }, e.target.value);
+          }
         });
       }
     }
